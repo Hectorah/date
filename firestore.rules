@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net: Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 2. Validation Blueprint for Photo entity
+    function isValidPhoto(data) {
+      return data.keys().hasAll(['id', 'url', 'title', 'category', 'createdAt'])
+        && data.keys().size() <= 8
+        && data.id is string
+        && data.id.size() <= 128
+        && data.url is string
+        && data.url.size() <= 4096
+        && data.title is string
+        && data.title.size() <= 150
+        && data.category is string
+        && data.category.size() <= 100
+        && data.createdAt is int
+        && (!data.keys().contains('size') || (data.size is string && data.size.size() <= 50))
+        && (!data.keys().contains('storagePath') || (data.storagePath is string && data.storagePath.size() <= 500))
+        && (!data.keys().contains('caption') || (data.caption is string && data.caption.size() <= 2000));
+    }
+
+    // Rules for Photos collection
+    match /photos/{photoId} {
+      // Allow read/list access to authenticated couple members
+      allow read, list: if isSignedIn();
+
+      // Allow creation of a new photo
+      allow create: if isSignedIn() 
+        && isValidId(photoId)
+        && isValidPhoto(incoming())
+        && incoming().createdAt <= request.time.toMillis() + 60000; // soft timestamp limit
+
+      // Allow updates to caption/title but prevent modifying core fields (id, url, createdAt, size, storagePath)
+      allow update: if isSignedIn()
+        && isValidId(photoId)
+        && isValidPhoto(incoming())
+        && incoming().id == existing().id
+        && incoming().url == existing().url
+        && incoming().createdAt == existing().createdAt
+        && (!existing().keys().contains('size') || incoming().size == existing().size)
+        && (!existing().keys().contains('storagePath') || incoming().storagePath == existing().storagePath)
+        && incoming().diff(existing()).affectedKeys().hasOnly(['caption', 'title', 'category']);
+
+      // Allow deletion
+      allow delete: if isSignedIn();
+    }
+  }
+}

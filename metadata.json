@@ -1,0 +1,6 @@
+{
+  "name": "Private Photo Gallery",
+  "description": "Una galería de fotos privada estilo Pinterest para parejas, con diseño estético, animaciones fluidas y soporte para almacenamiento local y Firebase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "Photo": {
+      "title": "Photo",
+      "description": "Un recuerdo fotográfico guardado por la pareja con metadatos asociados.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID único autogenerado del documento"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL directa de la imagen (Firebase Storage o Base64)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Título descriptivo del momento"
+        },
+        "category": {
+          "type": "string",
+          "description": "Categoría o álbum del recuerdo"
+        },
+        "createdAt": {
+          "type": "integer",
+          "description": "Timestamp en milisegundos de creación del recuerdo"
+        },
+        "size": {
+          "type": "string",
+          "description": "Tamaño del archivo formateado para humanos"
+        },
+        "storagePath": {
+          "type": "string",
+          "description": "Ruta física del archivo en Firebase Storage para su borrado"
+        },
+        "caption": {
+          "type": "string",
+          "description": "Historia, anécdota o dedicatoria escrita por la pareja"
+        }
+      },
+      "required": ["id", "url", "title", "category", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/photos/{photoId}": {
+      "schema": "Photo",
+      "description": "Colección global que almacena todos los recuerdos fotográficos compartidos"
+    }
+  }
+}
